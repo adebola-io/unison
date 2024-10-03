@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import Peer from 'peerjs';
+import Peer, { DataConnection } from 'peerjs';
 import { marked } from 'marked';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -17,7 +17,7 @@ const message = ref('');
 const conversations = ref<Conversation[]>([]);
 const activeConversationId = ref<string | null>(null);
 const peer = ref<Peer | null>(null);
-const connections = ref<{ [key: string]: Peer.DataConnection }>({});
+const connections = ref<{ [key: string]: DataConnection }>({});
 const errorMessage = ref('');
 
 const activeConversation = computed(() => 
@@ -46,7 +46,7 @@ function connect() {
   }
 }
 
-function setupConnection(conn: Peer.DataConnection) {
+function setupConnection(conn: DataConnection) {
   connections.value[conn.peer] = conn;
   const newConversation: Conversation = { 
     id: uuidv4(), 
@@ -57,10 +57,10 @@ function setupConnection(conn: Peer.DataConnection) {
   conversations.value.push(newConversation);
   activeConversationId.value = newConversation.id;
 
-  conn.on('data', (data: string) => {
+  conn.on('data', (data) => {
     const conversation = conversations.value.find(c => c.peerId === conn.peer);
     if (conversation) {
-      conversation.messages.push({ sender: 'Remote', content: data });
+      conversation.messages.push({ sender: 'Remote', content: data as string });
     }
   });
 }
